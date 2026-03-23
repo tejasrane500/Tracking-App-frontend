@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 
 const ProfileForm = ({ userData }) => {
   const [locationName, setLocationName] = useState("Location not set");
+
+  const base_url = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -59,7 +61,7 @@ const ProfileForm = ({ userData }) => {
 
     try {
       // 2. Backend ko data bhejo
-      const response = await fetch('http://localhost:5000/api/auth/update-profile', {
+      const response = await fetch(`${base_url}/api/auth/update-profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

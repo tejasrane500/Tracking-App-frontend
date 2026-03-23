@@ -36,7 +36,8 @@ const TrackingApp = ({ onLogout, userData }) => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/auth/all-users');
+        const base_url = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+        const response = await axios.get(`${base_url}/api/auth/all-users`);
         setAllUsers(response.data);
       } catch (err) {
         console.error("Users load nahi ho paye", err);

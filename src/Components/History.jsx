@@ -18,6 +18,8 @@ const History = () => {
     }
   };
 
+  const base_url = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
   // ✅ 1. Delete Function handle karein
   const handleDelete = async (id) => {
     if (!window.confirm("Bhai, kya aap sach mein ye record delete karna chahte ho?")) return;
@@ -25,7 +27,7 @@ const History = () => {
     try {
       const token = sessionStorage.getItem('token');
       // Backend ko delete request bhejein
-      await axios.delete(`http://localhost:5000/api/auth/delete-history/${id}`, {
+      await axios.delete(`${base_url}/api/auth/delete-history/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -48,7 +50,7 @@ const History = () => {
 
         if (userId) {
           // ✅ Backend route: /api/auth/history/:userId
-          const response = await axios.get(`http://localhost:5000/api/auth/history/${userId}`, {
+          const response = await axios.get(`${base_url}/api/auth/history/${userId}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setHistoryData(response.data);

@@ -6,6 +6,8 @@ import toast from 'react-hot-toast';
 const IncomingRequests = ({ userId }) => {
   const [requests, setRequests] = useState([]);
 
+  const base_url = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
   // 1. Fetch Requests from Backend
   const fetchRequests = async () => {
   if (!userId || userId === "undefined") {
@@ -14,7 +16,7 @@ const IncomingRequests = ({ userId }) => {
   }
 
   try {
-    const res = await axios.get(`http://localhost:5000/api/auth/incoming/${userId}`);
+    const res = await axios.get(`${base_url}/api/auth/incoming/${userId}`);
     setRequests(res.data);
   } catch (err) {
     console.log("Error fetching requests:", err.response?.status);
@@ -30,7 +32,7 @@ const IncomingRequests = ({ userId }) => {
   // 2. Accept/Reject Logic
   const handleResponse = async (requestId, status) => {
     try {
-      await axios.post('http://localhost:5000/api/auth/respond', { requestId, status });
+      await axios.post(`${base_url}/api/auth/respond`, { requestId, status });
       toast.success(status === 'accepted' ? "Location Sharing On! ✅" : "Request Rejected ❌");
       fetchRequests(); // List refresh karo
     } catch (err) {

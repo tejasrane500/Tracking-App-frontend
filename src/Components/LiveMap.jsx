@@ -39,6 +39,8 @@ const LiveMap = ({ userData }) => {
     const [targetLocation, setTargetLocation] = useState(null);
     const [myLiveCoords, setMyLiveCoords] = useState(null);
 
+    const base_url = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
     const location = useLocation();
 
     useEffect(() => {
@@ -60,7 +62,7 @@ const LiveMap = ({ userData }) => {
                         const { latitude, longitude } = position.coords;
                         setMyLiveCoords({ latitude, longitude });
                         try {
-                            await axios.post('http://localhost:5000/api/auth/update-location', {
+                            await axios.post(`${base_url}/api/auth/update-location`, {
                                 userId: sId, latitude, longitude
                             });
                         } catch (err) {
@@ -86,7 +88,7 @@ const LiveMap = ({ userData }) => {
         const checkStatus = async () => {
             if (!sId || !targetMobile) return;
             try {
-                const res = await axios.get(`http://localhost:5000/api/auth/status/${sId}/${targetMobile}`);
+                const res = await axios.get(`${base_url}/api/auth/status/${sId}/${targetMobile}`);
                 if (res.data.status === 'accepted') {
                     setRequestStatus('accepted');
                     if (res.data.location && res.data.location.lat) {
@@ -123,7 +125,7 @@ const LiveMap = ({ userData }) => {
         setTargetLocation(null); 
 
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/send-request', {
+            const res = await axios.post(`${base_url}/api/auth/send-request`, {
                 senderId: sId, 
                 targetMobile: targetMobile
             });

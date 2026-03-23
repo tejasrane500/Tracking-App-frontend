@@ -15,7 +15,8 @@ const ContactList = ({ userData }) => {
         const fetchUsers = async () => {
             try {
                 // Aapne jo signup wala logic banaya tha, wahi se saare users uthao
-                const res = await axios.get('http://localhost:5000/api/auth/all-users'); 
+                const base_url = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+                const res = await axios.get(`${base_url}/api/auth/all-users`); 
                 // Note: Iske liye backend mein ek simple router.get('/all-users') banana padega
                 setUsers(res.data.filter(u => u._id !== userData?._id));
             } catch (err) {

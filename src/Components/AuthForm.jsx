@@ -84,7 +84,11 @@ function FormCard({ mode, visible, onSwitch, onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const toastId = toast.loading('Authenticating...');
-    const URL = isLogin ? 'http://localhost:5000/api/auth/login' : 'http://localhost:5000/api/auth/signup';
+    // Aapka .env variable fetch karein, aur fallback ke liye localhost rakhein
+    const base_url = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    const URL = isLogin 
+    ? `${base_url}/api/auth/login` 
+    : `${base_url}/api/auth/signup`;
     const payload = isLogin ? { email, password } : { email, password, fullName };
 
     try {

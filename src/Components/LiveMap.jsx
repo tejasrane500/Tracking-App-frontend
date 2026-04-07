@@ -4,31 +4,42 @@ import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import toast from 'react-hot-toast';
 import { useLocation } from 'react-router-dom';
-import RoutingControl from "./RoutingControl"; // ✅ Import Routing
+import RoutingControl from "./RoutingControl";
 
-// Leaflet Icon Fix
-let DefaultIcon = L.icon({
-    iconUrl: markerIcon,
-    shadowUrl: markerShadow,
+// --- CUSTOM ICONS SETUP ---
+// --- ICONS LOGIC ---
+const iconShadow = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png';
+
+// Blue Icon (Aapke liye)
+const BlueIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+    shadowUrl: iconShadow,
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
+    shadowSize: [41, 41]
 });
-L.Marker.prototype.options.icon = DefaultIcon;
 
-// Recenter Component
+// Red Icon (Target ke liye)
+const RedIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
 const RecenterMap = ({ location }) => {
     const map = useMap();
     useEffect(() => {
         if (location && location.lat && location.lng) {
-            // .panTo use karne se transition smooth hota hai setView ke muqable
             map.panTo([location.lat, location.lng]); 
         }
-    }, [location.lat, location.lng]); // Sirf lat/lng badalne par hi trigger hoga
+    }, [location.lat, location.lng]);
     return null;
 };
 
@@ -40,7 +51,6 @@ const LiveMap = ({ userData }) => {
     const [myLiveCoords, setMyLiveCoords] = useState(null);
 
     const base_url = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-
     const location = useLocation();
 
     useEffect(() => {
@@ -49,7 +59,6 @@ const LiveMap = ({ userData }) => {
         }
     }, [location.state]);
 
-    // Logic 1: Apni location update logic (Same as before)
     useEffect(() => {
         let locationInterval;
         const sId = userData?._id || userData?.id;
@@ -80,7 +89,6 @@ const LiveMap = ({ userData }) => {
         return () => { if (locationInterval) clearInterval(locationInterval); };
     }, [userData?._id]);
 
-    // Logic 2: Polling for Target Status (Same as before)
     useEffect(() => {
         let interval;
         const sId = userData?._id || userData?.id;
@@ -118,33 +126,25 @@ const LiveMap = ({ userData }) => {
         }
 
         setIsRequesting(true);
-
-        // ✅ CRITICAL FIX: Nayi request bhejne se pehle purana status aur location saaf karein
-        // Isse "Map is Locked" wali screen turant wapas aa jayegi
         setRequestStatus('pending'); 
         setTargetLocation(null); 
 
         try {
-            const res = await axios.post(`${base_url}/api/auth/send-request`, {
+            await axios.post(`${base_url}/api/auth/send-request`, {
                 senderId: sId, 
                 targetMobile: targetMobile
             });
-
-            // Backend ab hamesha 'pending' hi bhejega (hamare naye logic ke hisab se)
             setRequestStatus('pending');
             toast.success("Request sent successfully! Approval ka wait karein.");
         } catch (error) {
             const msg = error.response?.data?.message;
-            // Purana "Pehle se linked" wala condition yahan se hata diya hai 
-            // kyunki ab hum hamesha re-approval chahte hain
             toast.error(msg || "Request fail ho gayi!");
-            setRequestStatus(null); // Error aane par lock hata ya reset karein
+            setRequestStatus(null);
         } finally {
             setIsRequesting(false);
         }
     };
 
-    // Helper: Dono coordinates nikalne ke liye
     const getMyCoords = () => ({
         lat: myLiveCoords?.latitude || userData?.location?.latitude,
         lng: myLiveCoords?.longitude || userData?.location?.longitude
@@ -152,7 +152,6 @@ const LiveMap = ({ userData }) => {
 
     return (
         <div className="h-screen flex flex-col bg-slate-50">
-            {/* --- HEADER --- */}
             <div className="bg-white border-b border-slate-200 p-4 shadow-sm z-[1000]">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3 bg-blue-50 px-4 py-2 rounded-2xl border border-blue-100">
@@ -189,7 +188,6 @@ const LiveMap = ({ userData }) => {
                 </div>
             </div>
 
-            {/* --- MAP AREA --- */}
             <div className="flex-1 relative overflow-hidden">
                 {requestStatus !== 'accepted' && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/20 backdrop-blur-sm z-[999]">
@@ -205,34 +203,32 @@ const LiveMap = ({ userData }) => {
                 
                 <MapContainer 
                     center={[21.0477, 75.7889]} 
-                    zoom={13} 
+                    zoom={15} 
                     style={{ height: '100%', width: '100%' }}
                     zoomControl={false}
                 >
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <TileLayer 
+                        url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+                        attribution='&copy; Google Maps'
+                    />
 
-                    {/* Target Marker */}
+                    {/* Target Marker (Red) */}
                     {targetLocation && targetLocation.lat && (
-                        <>
-                            <RecenterMap location={targetLocation} />
-                            <Marker position={[targetLocation.lat, targetLocation.lng]} icon={DefaultIcon}>
-                                <Popup>Target: {targetMobile}</Popup>
-                            </Marker>
-
-                            {/* ✅ DYNAMIC ROAD-FOLLOWING ROUTE */}
-                            {getMyCoords().lat && (
-                                <RoutingControl 
-                                    start={getMyCoords()} 
-                                    end={{ lat: targetLocation.lat, lng: targetLocation.lng }} 
-                                />
-                            )}
-                        </>
+                        <Marker 
+                            position={[targetLocation.lat, targetLocation.lng]} 
+                            icon={RedIcon}  // <--- Check karein ye RedIcon hai
+                        >
+                            <Popup>Target: {targetMobile}</Popup>
+                        </Marker>
                     )}
 
-                    {/* Self Marker */}
-                    {(myLiveCoords?.latitude || userData?.location?.latitude) && (
-                        <Marker position={[getMyCoords().lat, getMyCoords().lng]}>
-                            <Popup>You are here</Popup>
+                    {/* Self Marker (Blue) */}
+                    {getMyCoords().lat && (
+                        <Marker 
+                            position={[getMyCoords().lat, getMyCoords().lng]} 
+                            icon={BlueIcon} // <--- Check karein ye BlueIcon hai
+                        >
+                            <Popup>Aap Yahan Hain</Popup>
                         </Marker>
                     )}
                 </MapContainer>
